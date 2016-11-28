@@ -17,7 +17,6 @@
 package io.netty.util;
 
 import io.netty.util.concurrent.DefaultThreadFactory;
-import io.netty.util.internal.PlatformDependent;
 import io.netty.util.internal.StringUtil;
 import io.netty.util.internal.SystemPropertyUtil;
 import io.netty.util.internal.logging.InternalLogger;
@@ -26,9 +25,10 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Checks if a thread is alive periodically and runs a task when a thread dies.
@@ -44,10 +44,11 @@ public final class ThreadDeathWatcher {
     // visible for testing
     static final ThreadFactory threadFactory;
 
-    private static final Queue<Entry> pendingEntries = PlatformDependent.newMpscQueue();
+    // Use a MPMC queue as we may end up checking isEmpty() from multiple threads which may not be allowed to do
+    // concurrently depending on the implemenation of it in a MPSC queue.
+    private static final Queue<Entry> pendingEntries = new ConcurrentLinkedQueue<Entry>();
     private static final Watcher watcher = new Watcher();
-    private static final AtomicBoolean started = new AtomicBoolean();
-    private static volatile Thread watcherThread;
+    private static final AtomicReference<Thread> watcherThread = new AtomicReference<Thread>();
 
     static {
         String poolName = "threadDeathWatcher";
@@ -100,10 +101,13 @@ public final class ThreadDeathWatcher {
     private static void schedule(Thread thread, Runnable task, boolean isWatch) {
         pendingEntries.add(new Entry(thread, task, isWatch));
 
-        if (started.compareAndSet(false, true)) {
-            Thread watcherThread = threadFactory.newThread(watcher);
-            watcherThread.start();
-            ThreadDeathWatcher.watcherThread = watcherThread;
+        // First check if there is no thread active atm and only if this is the case create a new one and try
+        // set it.
+        if (watcherThread.get() == null) {
+            Thread t = threadFactory.newThread(watcher);
+            if (watcherThread.compareAndSet(null, t)) {
+                t.start();
+            }
         }
     }
 
@@ -121,10 +125,10 @@ public final class ThreadDeathWatcher {
             throw new NullPointerException("unit");
         }
 
-        Thread watcherThread = ThreadDeathWatcher.watcherThread;
-        if (watcherThread != null) {
-            watcherThread.join(unit.toMillis(timeout));
-            return !watcherThread.isAlive();
+        Thread t = watcherThread.get();
+        if (t != null) {
+            t.join(unit.toMillis(timeout));
+            return !t.isAlive();
         } else {
             return true;
         }
@@ -142,10 +146,6 @@ public final class ThreadDeathWatcher {
                 fetchWatchees();
                 notifyWatchees();
 
-                // Try once again just in case notifyWatchees() triggered watch() or unwatch().
-                fetchWatchees();
-                notifyWatchees();
-
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException ignore) {
@@ -153,11 +153,12 @@ public final class ThreadDeathWatcher {
                 }
 
                 if (watchees.isEmpty() && pendingEntries.isEmpty()) {
+                    Thread currentThread = Thread.currentThread();
 
                     // Mark the current worker thread as stopped.
                     // The following CAS must always success and must be uncontended,
                     // because only one watcher thread should be running at the same time.
-                    boolean stopped = started.compareAndSet(true, false);
+                    boolean stopped = watcherThread.compareAndSet(currentThread, null);
                     assert stopped;
 
                     // Check if there are pending entries added by watch() while we do CAS above.
@@ -170,8 +171,8 @@ public final class ThreadDeathWatcher {
                     }
 
                     // There are pending entries again, added by watch()
-                    if (!started.compareAndSet(false, true)) {
-                        // watch() started a new watcher thread and set 'started' to true.
+                    if (!watcherThread.compareAndSet(null, currentThread)) {
+                        // watch() started a new watcher thread and set watcherThread.
                         // -> terminate this thread so that the new watcher reads from pendingEntries exclusively.
                         break;
                     }
