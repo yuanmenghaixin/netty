@@ -24,6 +24,8 @@ import io.netty.util.concurrent.GenericFutureListener;
 /**
  * The default {@link ChannelPromise} implementation.  It is recommended to use {@link Channel#newPromise()} to create
  * a new {@link ChannelPromise} rather than calling the constructor explicitly.
+ *
+ * NioServerSocketChannel 和 （EventExecutor =》并封装 DefaultPromise） 二者封装成DefaultChannelPromise
  */
 public class DefaultChannelPromise extends DefaultPromise<Void> implements ChannelPromise, FlushCheckpoint {
 
@@ -43,8 +45,8 @@ public class DefaultChannelPromise extends DefaultPromise<Void> implements Chann
     /**
      * Creates a new instance.
      *
-     * @param channel
-     *        the {@link Channel} associated with this future
+     * @param channel the {@link Channel} associated with this future
+     *        NioServerSocketChannel 和 （EventExecutor =》并封装 DefaultPromise） 二者封装成DefaultChannelPromise
      */
     public DefaultChannelPromise(Channel channel, EventExecutor executor) {
         super(executor);

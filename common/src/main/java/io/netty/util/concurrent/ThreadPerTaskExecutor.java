@@ -18,6 +18,9 @@ package io.netty.util.concurrent;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
 
+/**
+ * 每个任务执行线程
+ */
 public final class ThreadPerTaskExecutor implements Executor {
     private final ThreadFactory threadFactory;
 
@@ -30,6 +33,6 @@ public final class ThreadPerTaskExecutor implements Executor {
 
     @Override
     public void execute(Runnable command) {
-        threadFactory.newThread(command).start();
+        threadFactory.newThread(command).start();//跳转到DefaultThreadFactory.newThread() 方法
     }
 }

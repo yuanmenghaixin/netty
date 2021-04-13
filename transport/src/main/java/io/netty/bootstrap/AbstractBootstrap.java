@@ -16,20 +16,13 @@
 
 package io.netty.bootstrap;
 
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPromise;
-import io.netty.channel.DefaultChannelPromise;
-import io.netty.channel.EventLoop;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.ReflectiveChannelFactory;
+import io.netty.channel.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import io.netty.util.internal.StringUtil;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -46,11 +39,18 @@ import java.util.Map;
  * transports such as datagram (UDP).</p>
  */
 public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C extends Channel> implements Cloneable {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractBootstrap.class);
 
+    /**
+     * volatile 变量类型的 bossgroup
+     */
     volatile EventLoopGroup group;
     @SuppressWarnings("deprecation")
     private volatile ChannelFactory<? extends C> channelFactory;
     private volatile SocketAddress localAddress;
+    /**
+     * 服务端父配置参数
+     */
     private final Map<ChannelOption<?>, Object> options = new LinkedHashMap<ChannelOption<?>, Object>();
     private final Map<AttributeKey<?>, Object> attrs = new LinkedHashMap<AttributeKey<?>, Object>();
     private volatile ChannelHandler handler;
@@ -96,7 +96,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     public B channel(Class<? extends C> channelClass) {
         if (channelClass == null) {
             throw new NullPointerException("channelClass");
-        }
+        }logger.info("此处设置channelFactory后期通过反射获取对象 channelFactory(new ReflectiveChannelFactory<C>(" + channelClass + "));比如服务端 serverBootstrap.channel(NioServerSocketChannel.class)");
         return channelFactory(new ReflectiveChannelFactory<C>(channelClass));
     }
 
@@ -124,7 +124,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
      * has a no-args constructor, its highly recommend to just use {@link #channel(Class)} for
      * simplify your code.
      */
-    @SuppressWarnings({ "unchecked", "deprecation" })
+    @SuppressWarnings({"unchecked", "deprecation"})
     public B channelFactory(io.netty.channel.ChannelFactory<? extends C> channelFactory) {
         return channelFactory((ChannelFactory<C>) channelFactory);
     }
@@ -274,10 +274,11 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         if (localAddress == null) {
             throw new NullPointerException("localAddress");
         }
-        return doBind(localAddress);
+        return doBind(localAddress);//绑定地址端口
     }
 
     private ChannelFuture doBind(final SocketAddress localAddress) {
+        logger.info("doBind->initAndRegister()");
         final ChannelFuture regFuture = initAndRegister();
         final Channel channel = regFuture.channel();
         if (regFuture.cause() != null) {
@@ -314,10 +315,12 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     final ChannelFuture initAndRegister() {
+
         Channel channel = null;
         try {
-            channel = channelFactory.newChannel();
-            init(channel);
+            channel = channelFactory.newChannel();//TODO 图灵第一列 NioServerSocketChannel ->ReflectiveChannelFactory 通过反射工厂实例化 NioServerSocketChannel ->相当于ServerSocketChannel.open(); 并且赋值感兴趣事件属性SelectionKey.OP_ACCEPT
+            logger.info("ServerBootstrap.init(channel)开始");
+            init(channel);//TODO 图灵第二列
         } catch (Throwable t) {
             if (channel != null) {
                 // channel can be null if newChannel crashed (eg SocketException("too many open files"))
@@ -326,8 +329,11 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             // as the Channel is not registered yet we need to force the usage of the GlobalEventExecutor
             return new DefaultChannelPromise(channel, GlobalEventExecutor.INSTANCE).setFailure(t);
         }
-
-        ChannelFuture regFuture = config().group().register(channel);
+        logger.info("ChannelFuture regFuture = config().group().register(channel);//TODO 图灵第三列");
+        /*ServerBootstrapConfig serverBootstrapConfig= (ServerBootstrapConfig) config();
+        EventLoopGroup eventLoopGroup=serverBootstrapConfig.group();//bossgroup
+        ChannelFuture regFuture1 = eventLoopGroup.register(channel);*/
+        ChannelFuture regFuture = config().group().register(channel);//TODO 图灵第三列 MultithreadEventLoopGroup
         if (regFuture.cause() != null) {
             if (channel.isRegistered()) {
                 channel.close();
@@ -356,7 +362,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
 
         // This method is invoked before channelRegistered() is triggered.  Give user handlers a chance to set up
         // the pipeline in its channelRegistered() implementation.
-        channel.eventLoop().execute(new Runnable() {
+        channel.eventLoop().execute(new Runnable() {//SingleThreadEventExecutor.execute()
             @Override
             public void run() {
                 if (regFuture.isSuccess()) {
@@ -439,8 +445,8 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder()
-            .append(StringUtil.simpleClassName(this))
-            .append('(').append(config()).append(')');
+                .append(StringUtil.simpleClassName(this))
+                .append('(').append(config()).append(')');
         return buf.toString();
     }
 

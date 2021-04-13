@@ -55,6 +55,9 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     private final Channel parent;
     private final ChannelId id;
     private final Unsafe unsafe;
+    /**
+     * 是客户端还是服务端ServerSocketChannel还是SocketChannel
+     */
     private final DefaultChannelPipeline pipeline;
     private final VoidChannelPromise unsafeVoidPromise = new VoidChannelPromise(this, false);
     private final CloseFuture closeFuture = new CloseFuture(this);
@@ -77,8 +80,9 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     protected AbstractChannel(Channel parent) {
         this.parent = parent;
         id = newId();
-        unsafe = newUnsafe();
-        pipeline = newChannelPipeline();
+        unsafe = newUnsafe();//NioMessageUnsafe
+        logger.info("初始化channel为 NioServerSocketChannel 时 newChannelPipeline-》 pipeline = newChannelPipeline()-》 new DefaultChannelPipeline(NioServerSocketChannel)");
+        pipeline = newChannelPipeline();//双端链表
     }
 
     /**
@@ -143,7 +147,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
     @Override
     public ChannelPipeline pipeline() {
-        return pipeline;
+        return pipeline;//服务端ServerSocketChannel还是SocketChannel
     }
 
     @Override
@@ -453,6 +457,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
         @Override
         public final void register(EventLoop eventLoop, final ChannelPromise promise) {
+            logger.info("SingleThreadEventLoop调用父类AbstractChannel的register(eventLoop,promise)方法");
             if (eventLoop == null) {
                 throw new NullPointerException("eventLoop");
             }
@@ -466,18 +471,19 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 return;
             }
 
-            AbstractChannel.this.eventLoop = eventLoop;
+            AbstractChannel.this.eventLoop = eventLoop;//NioEventLoop
 
-            if (eventLoop.inEventLoop()) {
-                register0(promise);
+            if (eventLoop.inEventLoop()) {//传进来的线程和当前线程一致，如果一致调用同步
+                register0(promise);//同步调用
             } else {
                 try {
-                    eventLoop.execute(new Runnable() {
+                    //创建任务 eventLoop代表线程池
+                    eventLoop.execute(new Runnable() {//TODO 跳转到 SingleThreadEventExecutor.execute() 方法
                         @Override
                         public void run() {
-                            register0(promise);
+                            register0(promise);//异步调用
                         }
-                    });
+                    },"");
                 } catch (Throwable t) {
                     logger.warn(
                             "Force-closing a channel whose registration task was not accepted by an event loop: {}",
@@ -497,12 +503,14 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                     return;
                 }
                 boolean firstRegistration = neverRegistered;
-                doRegister();
+                logger.info("AbstractChannel->doRegister()");
+                doRegister();//TODO 相当于 ServerSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
                 neverRegistered = false;
                 registered = true;
 
                 // Ensure we call handlerAdded(...) before we actually notify the promise. This is needed as the
                 // user may already fire events through the pipeline in the ChannelFutureListener.
+               logger.info("调用pipeline里每个handler的handlerAdded方法");
                 pipeline.invokeHandlerAddedIfNeeded();
 
                 safeSetSuccess(promise);

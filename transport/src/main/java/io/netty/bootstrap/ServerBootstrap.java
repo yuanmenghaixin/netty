@@ -15,18 +15,7 @@
  */
 package io.netty.bootstrap;
 
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelConfig;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.ServerChannel;
+import io.netty.channel.*;
 import io.netty.util.AttributeKey;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
@@ -38,19 +27,27 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * {@link Bootstrap} sub-class which allows easy bootstrap of {@link ServerChannel}
- *
  */
 public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerChannel> {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ServerBootstrap.class);
-
+    /**
+     * 子选项配置
+     */
     private final Map<ChannelOption<?>, Object> childOptions = new LinkedHashMap<ChannelOption<?>, Object>();
     private final Map<AttributeKey<?>, Object> childAttrs = new LinkedHashMap<AttributeKey<?>, Object>();
     private final ServerBootstrapConfig config = new ServerBootstrapConfig(this);
+    /**
+     * volatile类型的变量 工作group
+     */
     private volatile EventLoopGroup childGroup;
+    /**
+     * 服务端ChannelHandler
+     */
     private volatile ChannelHandler childHandler;
 
-    public ServerBootstrap() { }
+    public ServerBootstrap() {
+    }
 
     private ServerBootstrap(ServerBootstrap bootstrap) {
         super(bootstrap);
@@ -139,24 +136,25 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
 
     @Override
     void init(Channel channel) throws Exception {
-        final Map<ChannelOption<?>, Object> options = options0();
-        synchronized (options) {
-            channel.config().setOptions(options);
+        logger.info("ServerBootstrap的init(channel) 初始化方法；NioServerSocketChannel-》ServerSocketChannel的包装类");
+        final Map<ChannelOption<?>, Object> options = options0();//ServerBootstrap 配置项的值
+        synchronized (options) {//初始化配置
+            channel.config().setOptions(options);//NIOServerSocketChannelConfig
         }
 
         final Map<AttributeKey<?>, Object> attrs = attrs0();
         synchronized (attrs) {
-            for (Entry<AttributeKey<?>, Object> e: attrs.entrySet()) {
+            for (Entry<AttributeKey<?>, Object> e : attrs.entrySet()) {
                 @SuppressWarnings("unchecked")
                 AttributeKey<Object> key = (AttributeKey<Object>) e.getKey();
                 channel.attr(key).set(e.getValue());
             }
         }
 
-        ChannelPipeline p = channel.pipeline();
+        ChannelPipeline serverSocketChannelPipeline = channel.pipeline();
 
-        final EventLoopGroup currentChildGroup = childGroup;
-        final ChannelHandler currentChildHandler = childHandler;
+        final EventLoopGroup currentChildGroup = childGroup;//当前工作组线程 NIOEventLoop数组
+        final ChannelHandler currentChildHandler = childHandler;//服务端ChannelHandler
         final Entry<ChannelOption<?>, Object>[] currentChildOptions;
         final Entry<AttributeKey<?>, Object>[] currentChildAttrs;
         synchronized (childOptions) {
@@ -166,11 +164,12 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             currentChildAttrs = childAttrs.entrySet().toArray(newAttrArray(childAttrs.size()));
         }
 
-        p.addLast(new ChannelInitializer<Channel>() {
+        serverSocketChannelPipeline.addLast(new ChannelInitializer<Channel>() {//TODO add才为重点
             @Override
             public void initChannel(Channel ch) throws Exception {
+                logger.info("initChannel(Channel ch):" + ch.toString());
                 final ChannelPipeline pipeline = ch.pipeline();
-                ChannelHandler handler = config.handler();
+                ChannelHandler handler = config.handler();//获取所有的 ServerBootstrap的childHandler
                 if (handler != null) {
                     pipeline.addLast(handler);
                 }
@@ -236,7 +235,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
 
             child.pipeline().addLast(childHandler);
 
-            for (Entry<ChannelOption<?>, Object> e: childOptions) {
+            for (Entry<ChannelOption<?>, Object> e : childOptions) {
                 try {
                     if (!child.config().setOption((ChannelOption<Object>) e.getKey(), e.getValue())) {
                         logger.warn("Unknown channel option: " + e);
@@ -246,7 +245,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                 }
             }
 
-            for (Entry<AttributeKey<?>, Object> e: childAttrs) {
+            for (Entry<AttributeKey<?>, Object> e : childAttrs) {
                 child.attr((AttributeKey<Object>) e.getKey()).set(e.getValue());
             }
 

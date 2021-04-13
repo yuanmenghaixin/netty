@@ -17,6 +17,8 @@ package io.netty.util.concurrent;
 
 import io.netty.util.internal.InternalThreadLocalMap;
 import io.netty.util.internal.PlatformDependent;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -42,6 +44,7 @@ import java.util.Set;
  * @see ThreadLocal
  */
 public class FastThreadLocal<V> {
+    private static final InternalLogger log = InternalLoggerFactory.getInstance(FastThreadLocal.class);
 
     private static final int variablesToRemoveIndex = InternalThreadLocalMap.nextVariableIndex();
 
@@ -64,6 +67,7 @@ public class FastThreadLocal<V> {
                 FastThreadLocal<?>[] variablesToRemoveArray =
                         variablesToRemove.toArray(new FastThreadLocal[variablesToRemove.size()]);
                 for (FastThreadLocal<?> tlv: variablesToRemoveArray) {
+                    log.info("删除"+tlv.toString());
                     tlv.remove(threadLocalMap);
                 }
             }
@@ -119,6 +123,7 @@ public class FastThreadLocal<V> {
 
         @SuppressWarnings("unchecked")
         Set<FastThreadLocal<?>> variablesToRemove = (Set<FastThreadLocal<?>>) v;
+        log.info("variablesToRemove.remove(variable)删除"+variable.toString());
         variablesToRemove.remove(variable);
     }
 

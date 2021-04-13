@@ -15,12 +15,15 @@
  */
 package io.netty.channel;
 
+import io.netty.channel.nio.NioEventLoop;
 import io.netty.util.concurrent.RejectedExecutionHandler;
 import io.netty.util.concurrent.RejectedExecutionHandlers;
 import io.netty.util.concurrent.SingleThreadEventExecutor;
 import io.netty.util.internal.ObjectUtil;
 import io.netty.util.internal.SystemPropertyUtil;
 import io.netty.util.internal.UnstableApi;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.util.Queue;
 import java.util.concurrent.Executor;
@@ -31,6 +34,7 @@ import java.util.concurrent.ThreadFactory;
  *
  */
 public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor implements EventLoop {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(SingleThreadEventLoop.class);
 
     protected static final int DEFAULT_MAX_PENDING_TASKS = Math.max(16,
             SystemPropertyUtil.getInt("io.netty.eventLoop.maxPendingTasks", Integer.MAX_VALUE));
@@ -52,11 +56,20 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
         tailTasks = newTaskQueue(maxPendingTasks);
     }
 
+    /**
+     *
+     * @param parent
+     * @param executor
+     * @param addTaskWakesUp 添加任务唤醒
+     * @param maxPendingTasks 最大待处理任务数 - 整数最大值
+     * @param rejectedExecutionHandler 拒绝执行处理逻辑
+     */
     protected SingleThreadEventLoop(EventLoopGroup parent, Executor executor,
                                     boolean addTaskWakesUp, int maxPendingTasks,
                                     RejectedExecutionHandler rejectedExecutionHandler) {
         super(parent, executor, addTaskWakesUp, maxPendingTasks, rejectedExecutionHandler);
         tailTasks = newTaskQueue(maxPendingTasks);
+        logger.info("创建SingleThreadEventLoop");
     }
 
     @Override
@@ -70,14 +83,14 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
     }
 
     @Override
-    public ChannelFuture register(Channel channel) {
-        return register(new DefaultChannelPromise(channel, this));
+    public ChannelFuture register(Channel channel) {// SingleThreadEventLoop是一个 EventExecutor 接口的实现类
+        return this.register(new DefaultChannelPromise(channel, this));// channel=NioServerSocketChannel this=EventExecutor impl EventLoop =》并封装 DefaultPromise 二者封装成DefaultChannelPromise
     }
 
     @Override
-    public ChannelFuture register(final ChannelPromise promise) {
+    public ChannelFuture register(final ChannelPromise promise) {//上一个方法传递的参数
         ObjectUtil.checkNotNull(promise, "promise");
-        promise.channel().unsafe().register(this, promise);
+        promise.channel().unsafe().register(this, promise); // this=EventLoop promise=DefaultChannelPromise 【NioServerSocketChannel 和 （EventExecutor =》并封装 DefaultPromise） 二者封装成DefaultChannelPromise】
         return promise;
     }
 

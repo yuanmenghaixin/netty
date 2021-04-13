@@ -15,6 +15,9 @@
  */
 package io.netty.util.concurrent;
 
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -29,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * the same time.
  */
 public abstract class MultithreadEventExecutorGroup extends AbstractEventExecutorGroup {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(MultithreadEventExecutorGroup.class);
 
     private final EventExecutor[] children;
     private final Set<EventExecutor> readonlyChildren;
@@ -55,7 +59,9 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
      * @param args              arguments which will passed to each {@link #newChild(Executor, Object...)} call
      */
     protected MultithreadEventExecutorGroup(int nThreads, Executor executor, Object... args) {
-        this(nThreads, executor, DefaultEventExecutorChooserFactory.INSTANCE, args);
+        this(nThreads, executor, DefaultEventExecutorChooserFactory.INSTANCE, args);//定义事件执行策略-默认循环
+        logger.info("定义事件执行策略-默认轮询/循环");
+
     }
 
     /**
@@ -73,7 +79,8 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         }
 
         if (executor == null) {
-            executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
+            executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());// 创建线程池
+            logger.info("创建任务线程执行器（线程池）");
         }
 
         children = new EventExecutor[nThreads];
@@ -81,7 +88,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         for (int i = 0; i < nThreads; i ++) {
             boolean success = false;
             try {
-                children[i] = newChild(executor, args);
+                children[i] = newChild(executor, args);//NioEventLoopGroup NioEventLoop 类
                 success = true;
             } catch (Exception e) {
                 // TODO: Think about if this is a good exception type
@@ -133,7 +140,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
     }
 
     @Override
-    public EventExecutor next() {
+    public EventExecutor next() {//从 EventExecutor 数组中获取一个 EventExecutor 根据数组大小取余
         return chooser.next();
     }
 

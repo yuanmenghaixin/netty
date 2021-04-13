@@ -16,12 +16,16 @@
 
 package io.netty.channel;
 
+import io.netty.bootstrap.ServerBootstrap;
 import io.netty.util.internal.StringUtil;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 /**
  * A {@link ChannelFactory} that instantiates a new {@link Channel} by invoking its default constructor reflectively.
  */
 public class ReflectiveChannelFactory<T extends Channel> implements ChannelFactory<T> {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ReflectiveChannelFactory.class);
 
     private final Class<? extends T> clazz;
 
@@ -35,6 +39,7 @@ public class ReflectiveChannelFactory<T extends Channel> implements ChannelFacto
     @Override
     public T newChannel() {
         try {
+            logger.info("ReflectiveChannelFactory通过反射来实例化："+StringUtil.simpleClassName(clazz));
             return clazz.newInstance();
         } catch (Throwable t) {
             throw new ChannelException("Unable to create Channel from class " + clazz, t);

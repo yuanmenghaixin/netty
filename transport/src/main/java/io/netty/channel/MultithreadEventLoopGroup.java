@@ -48,7 +48,7 @@ public abstract class MultithreadEventLoopGroup extends MultithreadEventExecutor
      * @see {@link MultithreadEventExecutorGroup#MultithreadEventExecutorGroup(int, Executor, Object...)}
      */
     protected MultithreadEventLoopGroup(int nThreads, Executor executor, Object... args) {
-        super(nThreads == 0 ? DEFAULT_EVENT_LOOP_THREADS : nThreads, executor, args);
+        super(nThreads == 0 ? DEFAULT_EVENT_LOOP_THREADS : nThreads, executor, args);//决定线程数量设置多少
     }
 
     /**
@@ -74,7 +74,7 @@ public abstract class MultithreadEventLoopGroup extends MultithreadEventExecutor
 
     @Override
     public EventLoop next() {
-        return (EventLoop) super.next();
+        return (EventLoop) super.next();//MultithreadEventExecutorGroup.next()
     }
 
     @Override
@@ -82,7 +82,8 @@ public abstract class MultithreadEventLoopGroup extends MultithreadEventExecutor
 
     @Override
     public ChannelFuture register(Channel channel) {
-        return next().register(channel);
+        logger.info("从bossgroup里拿一个线程来处理 channel 的注册，将其注册到线程自己 selector 上");
+        return next().register(channel);//SingleThreadEventLoop.register(channel) 拿一个channel注册到 selector  NioServerSocketChannel
     }
 
     @Override

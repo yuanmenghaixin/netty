@@ -47,12 +47,11 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
  *
  */
 public abstract class SingleThreadEventExecutor extends AbstractScheduledEventExecutor implements OrderedEventExecutor {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(SingleThreadEventExecutor.class);
 
     static final int DEFAULT_MAX_PENDING_EXECUTOR_TASKS = Math.max(16,
             SystemPropertyUtil.getInt("io.netty.eventexecutor.maxPendingTasks", Integer.MAX_VALUE));
 
-    private static final InternalLogger logger =
-            InternalLoggerFactory.getInstance(SingleThreadEventExecutor.class);
 
     private static final int ST_NOT_STARTED = 1;
     private static final int ST_STARTED = 2;
@@ -160,7 +159,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     }
 
     /**
-     * Create a new instance
+     * Create a new instance 单线程事件线程池（执行器)  Executor线程池框架
      *
      * @param parent            the {@link EventExecutorGroup} which is the parent of this instance and belongs to it
      * @param executor          the {@link Executor} which will be used for executing
@@ -176,8 +175,9 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         this.addTaskWakesUp = addTaskWakesUp;
         this.maxPendingTasks = Math.max(16, maxPendingTasks);
         this.executor = ObjectUtil.checkNotNull(executor, "executor");
-        taskQueue = newTaskQueue(this.maxPendingTasks);
-        rejectedExecutionHandler = ObjectUtil.checkNotNull(rejectedHandler, "rejectedHandler");
+        taskQueue = newTaskQueue(this.maxPendingTasks);//最大任务队列 类似线程池
+        rejectedExecutionHandler = ObjectUtil.checkNotNull(rejectedHandler, "rejectedHandler"); //拒绝策略类似线程池
+        logger.info("创建完成单线程事件执行器 SingleThreadEventExecutor");
     }
 
     /**
@@ -332,7 +332,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         if (task == null) {
             throw new NullPointerException("task");
         }
-        if (!offerTask(task)) {
+        if (!offerTask(task)) {//放到队列
             reject(task);
         }
     }
@@ -341,7 +341,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         if (isShutdown()) {
             reject();
         }
-        return taskQueue.offer(task);
+        return taskQueue.offer(task);//放入对列
     }
 
     /**
@@ -746,18 +746,24 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
 
         return isTerminated();
     }
-
+    public void execute(Runnable task,String name) {
+        logger.info(name+" - SingleThreadEventExecutor.execute(task) 执行"+task.toString());
+        this.execute( task);
+    }
     @Override
     public void execute(Runnable task) {
+        logger.info("SingleThreadEventExecutor.execute(task) 执行"+task.toString());
         if (task == null) {
             throw new NullPointerException("task");
         }
 
         boolean inEventLoop = inEventLoop();
-        if (inEventLoop) {
+        if (inEventLoop) {//同步
+            logger.info("将task放到task队列中");
             addTask(task);
-        } else {
+        } else {// 异步
             startThread();
+            logger.info("将task放到task队列中");
             addTask(task);
             if (isShutdown() && removeTask(task)) {
                 reject();
@@ -858,8 +864,9 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     }
 
     private void doStartThread() {
+        logger.info("SingleThreadEventExecutor.doStartThread()");
         assert thread == null;
-        executor.execute(new Runnable() {
+        executor.execute(new Runnable() {//跳转到 ThreadPerTaskExecutor.execute()方法
             @Override
             public void run() {
                 thread = Thread.currentThread();
@@ -870,7 +877,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                 boolean success = false;
                 updateLastExecutionTime();
                 try {
-                    SingleThreadEventExecutor.this.run();
+                    SingleThreadEventExecutor.this.run();//
                     success = true;
                 } catch (Throwable t) {
                     logger.warn("Unexpected exception from an event executor: ", t);

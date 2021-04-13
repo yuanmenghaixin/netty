@@ -20,10 +20,9 @@ import io.netty.channel.EventLoop;
 import io.netty.channel.DefaultSelectStrategyFactory;
 import io.netty.channel.MultithreadEventLoopGroup;
 import io.netty.channel.SelectStrategyFactory;
-import io.netty.util.concurrent.EventExecutor;
-import io.netty.util.concurrent.EventExecutorChooserFactory;
-import io.netty.util.concurrent.RejectedExecutionHandler;
-import io.netty.util.concurrent.RejectedExecutionHandlers;
+import io.netty.util.concurrent.*;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.nio.channels.Selector;
 import java.nio.channels.spi.SelectorProvider;
@@ -34,6 +33,7 @@ import java.util.concurrent.ThreadFactory;
  * {@link MultithreadEventLoopGroup} implementations which is used for NIO {@link Selector} based {@link Channel}s.
  */
 public class NioEventLoopGroup extends MultithreadEventLoopGroup {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(NioEventLoopGroup.class);
 
     /**
      * Create a new instance using the default number of threads, the default {@link ThreadFactory} and
@@ -59,8 +59,11 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
         this(nThreads, threadFactory, SelectorProvider.provider());
     }
 
+
     public NioEventLoopGroup(int nThreads, Executor executor) {
-        this(nThreads, executor, SelectorProvider.provider());
+        // ServerSocketChannel.open()-》SelectorProvider.provider().openServerSocketChannel();
+        this(nThreads, executor, SelectorProvider.provider());//TODO SelectorProvider.provider().openSelector(); 创建 Selector
+        //logger.info("创建SelectorProvider->SelectorProvider.provider()");
     }
 
     /**
@@ -80,11 +83,14 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
     public NioEventLoopGroup(
             int nThreads, Executor executor, final SelectorProvider selectorProvider) {
         this(nThreads, executor, selectorProvider, DefaultSelectStrategyFactory.INSTANCE);
+        //logger.info("创建DefaultSelectStrategyFactory.INSTANCE");
     }
 
     public NioEventLoopGroup(int nThreads, Executor executor, final SelectorProvider selectorProvider,
-                             final SelectStrategyFactory selectStrategyFactory) {
+                             final SelectStrategyFactory selectStrategyFactory) {//后三个参数作为一个可变数组传递
+        //logger.info("相当于线程池的拒绝策略RejectedExecutionHandlers.reject()");
         super(nThreads, executor, selectorProvider, selectStrategyFactory, RejectedExecutionHandlers.reject());
+        logger.info("NioEventLoopGroup 创建完成");
     }
 
     public NioEventLoopGroup(int nThreads, Executor executor, EventExecutorChooserFactory chooserFactory,
@@ -122,7 +128,7 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
     }
 
     @Override
-    protected EventLoop newChild(Executor executor, Object... args) throws Exception {
+    protected EventLoop newChild(Executor executor, Object... args) throws Exception {//TODO 创建NioEventLoop = Executor Selector 任务队列 拒绝策略
         return new NioEventLoop(this, executor, (SelectorProvider) args[0],
             ((SelectStrategyFactory) args[1]).newSelectStrategy(), (RejectedExecutionHandler) args[2]);
     }

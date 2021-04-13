@@ -212,7 +212,7 @@ public class DefaultChannelConfig implements ChannelConfig {
 
     protected <T> void validate(ChannelOption<T> option, T value) {
         if (option == null) {
-            throw new NullPointerException("option");
+            throw new NullPointerException("option"+option);
         }
         option.validate(value);
     }

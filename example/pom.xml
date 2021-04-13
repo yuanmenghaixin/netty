@@ -84,11 +84,11 @@
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
     </dependency>
-    <dependency>
+   <!-- <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>${tcnative.artifactId}</artifactId>
       <classifier>${tcnative.classifier}</classifier>
-    </dependency>
+    </dependency>-->
     <dependency>
       <groupId>org.eclipse.jetty.npn</groupId>
       <artifactId>npn-api</artifactId>
@@ -145,6 +145,14 @@
           </commandlineArgs>
         </configuration>
       </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+                <source>8</source>
+                <target>8</target>
+            </configuration>
+        </plugin>
     </plugins>
   </build>
 </project>

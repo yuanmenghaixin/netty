@@ -23,6 +23,9 @@ import io.netty.channel.MessageSizeEstimator;
 import io.netty.channel.RecvByteBufAllocator;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.util.NetUtil;
+import io.netty.util.concurrent.SingleThreadEventExecutor;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.net.ServerSocket;
 import java.net.SocketException;
@@ -37,6 +40,7 @@ import static io.netty.channel.ChannelOption.SO_REUSEADDR;
  */
 public class DefaultServerSocketChannelConfig extends DefaultChannelConfig
                                               implements ServerSocketChannelConfig {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultServerSocketChannelConfig.class);
 
     protected final ServerSocket javaSocket;
     private volatile int backlog = NetUtil.SOMAXCONN;
@@ -75,8 +79,8 @@ public class DefaultServerSocketChannelConfig extends DefaultChannelConfig
 
     @Override
     public <T> boolean setOption(ChannelOption<T> option, T value) {
+        logger.info(this.toString()+"-SocketChannelConfig属性赋值");
         validate(option, value);
-
         if (option == SO_RCVBUF) {
             setReceiveBufferSize((Integer) value);
         } else if (option == SO_REUSEADDR) {

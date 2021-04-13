@@ -85,10 +85,10 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     private boolean registered;
 
     protected DefaultChannelPipeline(Channel channel) {
+        logger.info("newChannelPipeline()->创建的类型为：new DefaultChannelPipeline("+channel.getClass()+")");
         this.channel = ObjectUtil.checkNotNull(channel, "channel");
         succeededFuture = new SucceededChannelFuture(channel, null);
         voidPromise =  new VoidChannelPromise(channel, true);
-
         tail = new TailContext(this);
         head = new HeadContext(this);
 
@@ -196,11 +196,11 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     public final ChannelPipeline addLast(EventExecutorGroup group, String name, ChannelHandler handler) {
         final AbstractChannelHandlerContext newCtx;
         synchronized (this) {
+            logger.info(this.toString()+" -addLast() 添加ChannelHandler链表");
             checkMultiplicity(handler);
+            newCtx = newContext(group, filterName(name, handler), handler);//标记ChannelHandler是属于Inbound还是outbound
 
-            newCtx = newContext(group, filterName(name, handler), handler);
-
-            addLast0(newCtx);
+            addLast0(newCtx);//真正的添加
 
             // If the registered is false it means that the channel was not registered on an eventloop yet.
             // In this case we add the context to the pipeline and add a task that will call
@@ -228,11 +228,11 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     }
 
     private void addLast0(AbstractChannelHandlerContext newCtx) {
-        AbstractChannelHandlerContext prev = tail.prev;
-        newCtx.prev = prev;
-        newCtx.next = tail;
-        prev.next = newCtx;
-        tail.prev = newCtx;
+        AbstractChannelHandlerContext prev = tail.prev;//队尾指针的上一个Node
+        newCtx.prev = prev;//当前Node的前一个是队尾指针的上一个Node
+        newCtx.next = tail;//当前Node的下一个Node是队尾指针
+        prev.next = newCtx;//队尾指针的上一个Node的下一个节点是当前node
+        tail.prev = newCtx;//队尾指针的上一个Node当前node
     }
 
     @Override
@@ -640,7 +640,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     final void invokeHandlerAddedIfNeeded() {
         assert channel.eventLoop().inEventLoop();
-        if (firstRegistration) {
+        if (firstRegistration) {//是否是首次注册
             firstRegistration = false;
             // We are now registered to the EventLoop. It's time to call the callbacks for the ChannelHandlers,
             // that were added before the registration was done.
@@ -1119,6 +1119,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         // the EventLoop.
         PendingHandlerCallback task = pendingHandlerCallbackHead;
         while (task != null) {
+            logger.info(task.toString()+"execute()方法开始执行");
             task.execute();
             task = task.next;
         }
@@ -1126,7 +1127,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     private void callHandlerCallbackLater(AbstractChannelHandlerContext ctx, boolean added) {
         assert !registered;
-
+        logger.info("callHandlerCallbackLater 添加-"+ctx.toString());
         PendingHandlerCallback task = added ? new PendingHandlerAddedTask(ctx) : new PendingHandlerRemovedTask(ctx);
         PendingHandlerCallback pending = pendingHandlerCallbackHead;
         if (pending == null) {

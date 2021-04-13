@@ -89,7 +89,8 @@ public class OioSctpServerChannel extends AbstractOioMessageChannel
         boolean success = false;
         try {
             sch.configureBlocking(false);
-            selector = Selector.open();
+            selector = Selector.open();//创建selector 即创建epoll 创建多路复用器
+            //相当于把ServerSocketChannel注册到selector上，并且selector对客户端accept连接操作感兴趣
             sch.register(selector, SelectionKey.OP_ACCEPT);
             config = new OioSctpServerChannelConfig(this, sch);
             success = true;
@@ -189,7 +190,7 @@ public class OioSctpServerChannel extends AbstractOioMessageChannel
         try {
             final int selectedKeys = selector.select(SO_TIMEOUT);
             if (selectedKeys > 0) {
-                final Iterator<SelectionKey> selectionKeys = selector.selectedKeys().iterator();
+                final Iterator<SelectionKey> selectionKeys = selector.selectedKeys().iterator();//selector.selectedKeys()获取发生的所有的事件
                 for (;;) {
                     SelectionKey key = selectionKeys.next();
                     selectionKeys.remove();

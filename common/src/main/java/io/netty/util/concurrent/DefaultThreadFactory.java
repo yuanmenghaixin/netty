@@ -17,6 +17,8 @@
 package io.netty.util.concurrent;
 
 import io.netty.util.internal.StringUtil;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.util.Locale;
 import java.util.concurrent.ThreadFactory;
@@ -26,6 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * A {@link ThreadFactory} implementation with a simple naming rule.
  */
 public class DefaultThreadFactory implements ThreadFactory {
+    private static final InternalLogger log = InternalLoggerFactory.getInstance(DefaultThreadFactory.class);
 
     private static final AtomicInteger poolId = new AtomicInteger();
 
@@ -96,6 +99,8 @@ public class DefaultThreadFactory implements ThreadFactory {
         this.daemon = daemon;
         this.priority = priority;
         this.threadGroup = threadGroup;
+        log.info("默认线程工厂 DefaultThreadFactory 创建完：prefix：" + prefix + " daemon守护线程：" + " 优先级priority:" + priority + " 线程组threadGroup:" + threadGroup);
+        log.info("DefaultThreadFactory作用创建线程和线程池类似的功能");
     }
 
     public DefaultThreadFactory(String poolName, boolean daemon, int priority) {
@@ -105,7 +110,8 @@ public class DefaultThreadFactory implements ThreadFactory {
 
     @Override
     public Thread newThread(Runnable r) {
-        Thread t = newThread(new DefaultRunnableDecorator(r), prefix + nextId.incrementAndGet());
+        Thread t = newThread(new DefaultRunnableDecorator(r), prefix + nextId.incrementAndGet());//装饰器模式，执行完移除
+        log.info("DefaultThreadFactory.newThread()->创建线程作用-》线程名称：" + t.getName());
         try {
             if (t.isDaemon()) {
                 if (!daemon) {
@@ -114,6 +120,7 @@ public class DefaultThreadFactory implements ThreadFactory {
             } else {
                 if (daemon) {
                     t.setDaemon(true);
+                    log.info("设定为守护线程：" + t.getName());
                 }
             }
 
@@ -142,8 +149,9 @@ public class DefaultThreadFactory implements ThreadFactory {
         public void run() {
             try {
                 r.run();
+                log.info(r.toString()+"执行");
             } finally {
-                FastThreadLocal.removeAll();
+                FastThreadLocal.removeAll();//TODO ???? 事件执行完删除吗？？？？
             }
         }
     }

@@ -54,7 +54,10 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     private static final ClosedChannelException DO_CLOSE_CLOSED_CHANNEL_EXCEPTION = ThrowableUtil.unknownStackTrace(
             new ClosedChannelException(), AbstractNioChannel.class, "doClose()");
 
-    private final SelectableChannel ch;
+    private final SelectableChannel ch; //ServerSocketChannel serverSocket = ServerSocketChannel.open();
+    /**
+     * 相当于SelectionKey的值 读感兴趣的操作
+     */
     protected final int readInterestOp;
     volatile SelectionKey selectionKey;
     boolean readPending;
@@ -78,14 +81,14 @@ public abstract class AbstractNioChannel extends AbstractChannel {
      *
      * @param parent            the parent {@link Channel} by which this instance was created. May be {@code null}
      * @param ch                the underlying {@link SelectableChannel} on which it operates
-     * @param readInterestOp    the ops to set to receive data from the {@link SelectableChannel}
+     * @param readInterestOp    the ops to set to receive data from the {@link SelectableChannel} 相当于SelectionKey的值 读感兴趣操作
      */
     protected AbstractNioChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
-        super(parent);
-        this.ch = ch;
-        this.readInterestOp = readInterestOp;
+        super(parent);//bossGroup 为空，workerGroup 是否存在值？？？？
+        this.ch = ch;// ServerSocketChannel 相当于NIO代码创建的ServerSocketChannel serverSocket = ServerSocketChannel.open();
+        this.readInterestOp = readInterestOp;//当创建类型为NioServerSocketChannel时：readInterestOp事件的值，比如：readInterestOp=SelectionKey.OP_ACCEPT
         try {
-            ch.configureBlocking(false);
+            ch.configureBlocking(false);// serverSocket.configureBlocking(false); 设置为非阻塞
         } catch (IOException e) {
             try {
                 ch.close();
@@ -107,7 +110,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
 
     @Override
     public NioUnsafe unsafe() {
-        return (NioUnsafe) super.unsafe();
+        return (NioUnsafe) super.unsafe();// 服务端为NIOMessageUnsafe
     }
 
     protected SelectableChannel javaChannel() {
@@ -382,9 +385,10 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     @Override
     protected void doRegister() throws Exception {
         boolean selected = false;
-        for (;;) {
+        logger.info("自旋将channel注册到selector-重点");
+        for (;;) {//TODO 注册channel到selector对照NIO代码
             try {
-                selectionKey = javaChannel().register(eventLoop().selector, 0, this);
+                selectionKey = javaChannel().register(eventLoop().selector, 0, this);//TODO 相当于 ServerSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
                 return;
             } catch (CancelledKeyException e) {
                 if (!selected) {

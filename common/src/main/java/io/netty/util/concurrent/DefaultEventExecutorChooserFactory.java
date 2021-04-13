@@ -16,6 +16,8 @@
 package io.netty.util.concurrent;
 
 import io.netty.util.internal.UnstableApi;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -24,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @UnstableApi
 public final class DefaultEventExecutorChooserFactory implements EventExecutorChooserFactory {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultEventExecutorChooserFactory.class);
 
     public static final DefaultEventExecutorChooserFactory INSTANCE = new DefaultEventExecutorChooserFactory();
 
@@ -33,8 +36,10 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
     @Override
     public EventExecutorChooser newChooser(EventExecutor[] executors) {
         if (isPowerOfTwo(executors.length)) {
+            logger.info("newChooser()中 PowerOfTowEventExecutorChooser 事件执行创建");
             return new PowerOfTowEventExecutorChooser(executors);
         } else {
+            logger.info("newChooser()中 GenericEventExecutorChooser 事件执行创建");
             return new GenericEventExecutorChooser(executors);
         }
     }
@@ -53,6 +58,7 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
 
         @Override
         public EventExecutor next() {
+            logger.info("通过取余方式获取EventExecutor");
             return executors[idx.getAndIncrement() & executors.length - 1];
         }
     }
