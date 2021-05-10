@@ -23,13 +23,18 @@ import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.util.concurrent.AbstractScheduledEventExecutor;
 import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.SingleThreadEventExecutor;
 import io.netty.util.internal.ObjectUtil;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 final class EmbeddedEventLoop extends AbstractScheduledEventExecutor implements EventLoop {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(EmbeddedEventLoop.class);
 
     private final Queue<Runnable> tasks = new ArrayDeque<Runnable>(2);
 
@@ -43,6 +48,11 @@ final class EmbeddedEventLoop extends AbstractScheduledEventExecutor implements 
         return (EventLoop) super.next();
     }
 
+    @Override
+    public void execute(Runnable command,String name) {
+        logger.info(name+"-任务执行");
+        execute(command);
+    }
     @Override
     public void execute(Runnable command) {
         if (command == null) {

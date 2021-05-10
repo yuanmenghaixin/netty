@@ -7,11 +7,14 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public class GroupChatServer {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(GroupChatServer.class);
+
 
     private int port; //监听端口
-
 
     public GroupChatServer(int port) {
         this.port = port;
@@ -21,8 +24,8 @@ public class GroupChatServer {
     public void run() throws  Exception{
         //创建两个线程组bossGroup和workerGroup, 含有的子线程NioEventLoop的个数默认为cpu核数的两倍
         // bossGroup只是处理连接请求 ,真正的和客户端业务处理，会交给workerGroup完成
-        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-        EventLoopGroup workerGroup = new NioEventLoopGroup(); //CPU核数的2倍
+        EventLoopGroup bossGroup = new NioEventLoopGroup(1);logger.info("bossGroup 创建完成");
+        EventLoopGroup workerGroup = new NioEventLoopGroup(); logger.info("workerGroup 创建完成");//CPU核数的2倍
 
         try {
             //创建服务器端的启动对象 netty为 ServerBootstrap java原生为 ServerSocketChannel
@@ -32,8 +35,8 @@ public class GroupChatServer {
                     .channel(NioServerSocketChannel.class)//使用NioServerSocketChannel作为服务器的通道实现
                     // 初始化服务器连接队列大小，服务端处理客户端连接请求是顺序处理的,所以同一时间只能处理一个客户端连接。
                     // 多个客户端同时来的时候,服务端将不能处理的客户端连接请求放在队列中等待处理
-                    .option(ChannelOption.SO_BACKLOG, 128)
-                    .childOption(ChannelOption.SO_KEEPALIVE, true)
+                    .option(ChannelOption.SO_BACKLOG, 128)//服务端配置
+                    .childOption(ChannelOption.SO_KEEPALIVE, true)//客户端配置
                     //处理I / O事件或拦截I / O操作，然后将其转发到其{@link ChannelPipeline}中的下一个处理程序。
                     .childHandler(new ChannelInitializer<SocketChannel>() {//创建通道初始化对象，设置初始化参数
                         @Override

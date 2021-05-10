@@ -99,7 +99,7 @@ public class DefaultThreadFactory implements ThreadFactory {
         this.daemon = daemon;
         this.priority = priority;
         this.threadGroup = threadGroup;
-        log.info("默认线程工厂 DefaultThreadFactory 创建完：prefix：" + prefix + " daemon守护线程：" + " 优先级priority:" + priority + " 线程组threadGroup:" + threadGroup);
+        log.info("默认线程工厂 DefaultThreadFactory 创建完：prefix：" + prefix + " daemon守护线程：" +daemon+ " 优先级priority:" + priority + " 线程组threadGroup:" + threadGroup);
         log.info("DefaultThreadFactory作用创建线程和线程池类似的功能");
     }
 
@@ -134,9 +134,15 @@ public class DefaultThreadFactory implements ThreadFactory {
     }
 
     protected Thread newThread(Runnable r, String name) {
+        log.info("threadGroup:" + threadGroup);
+        log.info("Runnable:" + r.toString());
+        log.info("Runnable name:" + name);
         return new FastThreadLocalThread(threadGroup, r, name);
     }
 
+    /**
+     * Runnable的包装类
+     */
     private static final class DefaultRunnableDecorator implements Runnable {
 
         private final Runnable r;
@@ -149,7 +155,7 @@ public class DefaultThreadFactory implements ThreadFactory {
         public void run() {
             try {
                 r.run();
-                log.info(r.toString()+"执行");
+                log.info(r.toString() + "执行");
             } finally {
                 FastThreadLocal.removeAll();//TODO ???? 事件执行完删除吗？？？？
             }

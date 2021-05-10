@@ -21,6 +21,8 @@ import io.netty.channel.ChannelOutboundBuffer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.RecvByteBufAllocator;
 import io.netty.channel.ServerChannel;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.io.IOException;
 import java.net.PortUnreachableException;
@@ -30,11 +32,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * 当客户端连接，会触发OP_ACCEPT事件触发
  * {@link AbstractNioChannel} base class for {@link Channel}s that operate on messages.
  */
 public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractNioMessageChannel.class);
     boolean inputShutdown;
-
     /**
      * @see {@link AbstractNioChannel#AbstractNioChannel(Channel, SelectableChannel, int)}
      */
@@ -60,10 +63,10 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
         private final List<Object> readBuf = new ArrayList<Object>();
 
         @Override
-        public void read() {
+        public void read() {logger.info("有客户端连接，触发OP_ACCEPT事件发生");
             assert eventLoop().inEventLoop();
-            final ChannelConfig config = config();
-            final ChannelPipeline pipeline = pipeline();
+            final ChannelConfig config = config();//NioServerSocketChannelConfig
+            final ChannelPipeline pipeline = pipeline();//DefaultChannelPipeline 获取 服务端ServerSocketChannel
             final RecvByteBufAllocator.Handle allocHandle = unsafe().recvBufAllocHandle();
             allocHandle.reset(config);
 
@@ -72,7 +75,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
             try {
                 try {
                     do {
-                        int localRead = doReadMessages(readBuf);
+                        int localRead = doReadMessages(readBuf);//NioServerSocketChannel
                         if (localRead == 0) {
                             break;
                         }

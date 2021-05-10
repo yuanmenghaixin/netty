@@ -61,8 +61,8 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
 
 
     public NioEventLoopGroup(int nThreads, Executor executor) {
-        // ServerSocketChannel.open()-》SelectorProvider.provider().openServerSocketChannel();
-        this(nThreads, executor, SelectorProvider.provider());//TODO SelectorProvider.provider().openSelector(); 创建 Selector
+        //TODO 1.ServerSocketChannel.open()-》SelectorProvider.provider().openServerSocketChannel(); 作用1创建ServerSocketChannel
+        this(nThreads, executor, SelectorProvider.provider());//TODO 2.SelectorProvider.provider().openSelector(); 作用2创建 Selector
         //logger.info("创建SelectorProvider->SelectorProvider.provider()");
     }
 
@@ -82,7 +82,7 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
 
     public NioEventLoopGroup(
             int nThreads, Executor executor, final SelectorProvider selectorProvider) {
-        this(nThreads, executor, selectorProvider, DefaultSelectStrategyFactory.INSTANCE);
+        this(nThreads, executor, selectorProvider, DefaultSelectStrategyFactory.INSTANCE);//默认选择策略工厂
         //logger.info("创建DefaultSelectStrategyFactory.INSTANCE");
     }
 
@@ -130,6 +130,6 @@ public class NioEventLoopGroup extends MultithreadEventLoopGroup {
     @Override
     protected EventLoop newChild(Executor executor, Object... args) throws Exception {//TODO 创建NioEventLoop = Executor Selector 任务队列 拒绝策略
         return new NioEventLoop(this, executor, (SelectorProvider) args[0],
-            ((SelectStrategyFactory) args[1]).newSelectStrategy(), (RejectedExecutionHandler) args[2]);
+            ((SelectStrategyFactory) args[1]).newSelectStrategy(), (RejectedExecutionHandler) args[2]);//executor=ThreadPerTaskExecutor
     }
 }

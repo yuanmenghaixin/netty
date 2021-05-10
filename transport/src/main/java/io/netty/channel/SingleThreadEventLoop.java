@@ -58,8 +58,8 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
 
     /**
      *
-     * @param parent
-     * @param executor
+     * @param parent  NioEventLoopGroup
+     * @param executor ThreadPerTaskExecutor
      * @param addTaskWakesUp 添加任务唤醒
      * @param maxPendingTasks 最大待处理任务数 - 整数最大值
      * @param rejectedExecutionHandler 拒绝执行处理逻辑
@@ -67,8 +67,8 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
     protected SingleThreadEventLoop(EventLoopGroup parent, Executor executor,
                                     boolean addTaskWakesUp, int maxPendingTasks,
                                     RejectedExecutionHandler rejectedExecutionHandler) {
-        super(parent, executor, addTaskWakesUp, maxPendingTasks, rejectedExecutionHandler);
-        tailTasks = newTaskQueue(maxPendingTasks);
+        super(parent, executor, addTaskWakesUp, maxPendingTasks, rejectedExecutionHandler);//SingleThreadEventExecutor
+        tailTasks = newTaskQueue(maxPendingTasks);//new LinkedBlockingQueue<Runnable>(maxPendingTasks);
         logger.info("创建SingleThreadEventLoop");
     }
 
@@ -83,7 +83,7 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
     }
 
     @Override
-    public ChannelFuture register(Channel channel) {// SingleThreadEventLoop是一个 EventExecutor 接口的实现类
+    public ChannelFuture register(Channel channel) {// SingleThreadEventLoop 是一个 EventExecutor 接口的实现类
         return this.register(new DefaultChannelPromise(channel, this));// channel=NioServerSocketChannel this=EventExecutor impl EventLoop =》并封装 DefaultPromise 二者封装成DefaultChannelPromise
     }
 

@@ -63,7 +63,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
             throw new ChannelException("Failed to open a socket.", e);
         }
     }
-
+/** NioSocketChannelConfig */
     private final SocketChannelConfig config;
 
     /**
@@ -94,8 +94,8 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
      * @param socket    the {@link SocketChannel} which will be used
      */
     public NioSocketChannel(Channel parent, SocketChannel socket) {
-        super(parent, socket);
-        config = new NioSocketChannelConfig(this, socket.socket());
+        super(parent, socket);// parent=NioServerSocketChannel 和 socket=SocketChannel客户端socket
+        config = new NioSocketChannelConfig(this, socket.socket());//socket.socket()？？？？？？
     }
 
     @Override
@@ -368,8 +368,8 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
 
     @Override
     protected int doWriteBytes(ByteBuf buf) throws Exception {
-        final int expectedWrittenBytes = buf.readableBytes();
-        return buf.readBytes(javaChannel(), expectedWrittenBytes);
+        final int expectedWrittenBytes = buf.readableBytes();logger.info("从客户端socketChannel读取数据保存到ByteBuf");
+        return buf.readBytes(javaChannel(), expectedWrittenBytes);//TODO 从客户端socketChannel读取数据保存到ByteBuf 相当于NIO 源码 socketChannel.read(byteBuffer);
     }
 
     @Override

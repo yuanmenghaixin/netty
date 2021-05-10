@@ -15,6 +15,9 @@
  */
 package io.netty.util.concurrent;
 
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
+
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
 
@@ -22,6 +25,7 @@ import java.util.concurrent.ThreadFactory;
  * 每个任务执行线程
  */
 public final class ThreadPerTaskExecutor implements Executor {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ThreadPerTaskExecutor.class);
     private final ThreadFactory threadFactory;
 
     public ThreadPerTaskExecutor(ThreadFactory threadFactory) {
@@ -30,9 +34,9 @@ public final class ThreadPerTaskExecutor implements Executor {
         }
         this.threadFactory = threadFactory;
     }
-
     @Override
-    public void execute(Runnable command) {
+    public void execute(Runnable command) {//线程工厂的作用是创建线程吗？？？？？？
+        logger.info("ThreadPerTaskExecutor线程池执行任务-》 doStartThread -> threadFactory.newThread(command).start()");
         threadFactory.newThread(command).start();//跳转到DefaultThreadFactory.newThread() 方法
     }
 }

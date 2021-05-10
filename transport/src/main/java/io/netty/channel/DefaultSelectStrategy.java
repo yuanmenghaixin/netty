@@ -16,17 +16,23 @@
 package io.netty.channel;
 
 import io.netty.util.IntSupplier;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 /**
  * Default select strategy.
  */
 final class DefaultSelectStrategy implements SelectStrategy {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultSelectStrategy.class);
+
     static final SelectStrategy INSTANCE = new DefaultSelectStrategy();
 
-    private DefaultSelectStrategy() { }
+    private DefaultSelectStrategy() {
+    }
 
     @Override
     public int calculateStrategy(IntSupplier selectSupplier, boolean hasTasks) throws Exception {
+        logger.info("DefaultSelectStrategy.calculateStrategy()");
         return hasTasks ? selectSupplier.get() : SelectStrategy.SELECT;
     }
 }

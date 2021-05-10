@@ -171,13 +171,13 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     protected SingleThreadEventExecutor(EventExecutorGroup parent, Executor executor,
                                         boolean addTaskWakesUp, int maxPendingTasks,
                                         RejectedExecutionHandler rejectedHandler) {
-        super(parent);
+        super(parent);//AbstractScheduledEventExecutor
         this.addTaskWakesUp = addTaskWakesUp;
         this.maxPendingTasks = Math.max(16, maxPendingTasks);
         this.executor = ObjectUtil.checkNotNull(executor, "executor");
         taskQueue = newTaskQueue(this.maxPendingTasks);//最大任务队列 类似线程池
         rejectedExecutionHandler = ObjectUtil.checkNotNull(rejectedHandler, "rejectedHandler"); //拒绝策略类似线程池
-        logger.info("创建完成单线程事件执行器 SingleThreadEventExecutor");
+        logger.info("创建完成单线程事件执行器 SingleThreadEventExecutor"+executor.toString());
     }
 
     /**
@@ -284,7 +284,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         }
     }
 
-    private boolean fetchFromScheduledTaskQueue() {
+    private boolean fetchFromScheduledTaskQueue() {logger.info("fetchFromScheduledTaskQueue从计划任务队列中获取");
         long nanoTime = AbstractScheduledEventExecutor.nanoTime();
         Runnable scheduledTask  = pollScheduledTask(nanoTime);
         while (scheduledTask != null) {
@@ -341,7 +341,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         if (isShutdown()) {
             reject();
         }
-        return taskQueue.offer(task);//放入对列
+        return taskQueue.offer(task);//放入对列 offer方法在添加元素时，如果发现队列已满无法添加的话，会直接返回false。 add方法在添加元素的时候，若超出了度列的长度会直接抛出异常： 对于put方法，若向队尾添加元素的时候发现队列已经满了会发生阻塞一直等待空间，以加入元素。
     }
 
     /**
@@ -747,23 +747,23 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         return isTerminated();
     }
     public void execute(Runnable task,String name) {
-        logger.info(name+" - SingleThreadEventExecutor.execute(task) 执行"+task.toString());
+        logger.info(name+" - 在SingleThreadEventExecutor.execute(task) 方法执行该任务，任务信息:"+task.toString());
         this.execute( task);
     }
     @Override
     public void execute(Runnable task) {
-        logger.info("SingleThreadEventExecutor.execute(task) 执行"+task.toString());
+        logger.info("SingleThreadEventExecutor.execute(task) 执行"+task.getClass()+" - "+task.toString());
         if (task == null) {
             throw new NullPointerException("task");
         }
 
         boolean inEventLoop = inEventLoop();
         if (inEventLoop) {//同步
-            logger.info("将task放到task队列中");
+            logger.info(task.getClass()+"--SingleThreadEventExecutor.execute() 同步处理过程中将task放到task队列中");
             addTask(task);
         } else {// 异步
             startThread();
-            logger.info("将task放到task队列中");
+            logger.info(task.getClass()+"--SingleThreadEventExecutor.execute()异步处理过程中将task放到task队列中");
             addTask(task);
             if (isShutdown() && removeTask(task)) {
                 reject();
@@ -866,10 +866,11 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     private void doStartThread() {
         logger.info("SingleThreadEventExecutor.doStartThread()");
         assert thread == null;
-        executor.execute(new Runnable() {//跳转到 ThreadPerTaskExecutor.execute()方法
+        executor.execute(new Runnable() {//跳转到 ThreadPerTaskExecutor.execute()方法 该方法执行完就启动了当前线程
             @Override
             public void run() {
-                thread = Thread.currentThread();
+                thread = Thread.currentThread();//
+                logger.info("threadFactory.newThread(SingleThreadEventExecutor中创建的匿名线程).start()=》DefaultThreadFactory.newThread()->创建线程执行此处逻辑-启动的线程名称：" +thread.getName());
                 if (interrupted) {
                     thread.interrupt();
                 }
@@ -877,6 +878,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                 boolean success = false;
                 updateLastExecutionTime();
                 try {
+                    logger.info("这里执行执行 NioEventLoop.run：");
                     SingleThreadEventExecutor.this.run();//
                     success = true;
                 } catch (Throwable t) {

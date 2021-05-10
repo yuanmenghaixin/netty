@@ -97,7 +97,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         if (channelClass == null) {
             throw new NullPointerException("channelClass");
         }logger.info("此处设置channelFactory后期通过反射获取对象 channelFactory(new ReflectiveChannelFactory<C>(" + channelClass + "));比如服务端 serverBootstrap.channel(NioServerSocketChannel.class)");
-        return channelFactory(new ReflectiveChannelFactory<C>(channelClass));
+        return channelFactory(new ReflectiveChannelFactory<C>(channelClass));//TODO 设置channelFactory 工厂模式创建 NioServerSocketChannel 或者 NioSocketChannel
     }
 
     /**
@@ -317,8 +317,8 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     final ChannelFuture initAndRegister() {
 
         Channel channel = null;
-        try {
-            channel = channelFactory.newChannel();//TODO 图灵第一列 NioServerSocketChannel ->ReflectiveChannelFactory 通过反射工厂实例化 NioServerSocketChannel ->相当于ServerSocketChannel.open(); 并且赋值感兴趣事件属性SelectionKey.OP_ACCEPT
+        try {//去 NioServerSocketChannel 查看构造方法的源码 ①创建NioServerSocketChannel ②设置感兴趣事件OP_ACCEPT ③设置非阻塞 ④初始化channelPipeline
+            channel = channelFactory.newChannel();//TODO 图灵第一列 NioServerSocketChannel -> ReflectiveChannelFactory 反射工厂实例化 NioServerSocketChannel ->相当于ServerSocketChannel.open(); 并且赋值感兴趣事件属性SelectionKey.OP_ACCEPT 设置非阻塞 并初始化channelPipeline
             logger.info("ServerBootstrap.init(channel)开始");
             init(channel);//TODO 图灵第二列
         } catch (Throwable t) {

@@ -23,6 +23,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 /**
  * A {@link ChannelFactory} that instantiates a new {@link Channel} by invoking its default constructor reflectively.
+ * 一个 ReflectiveChannelFactory 实现类ChannelFactory接口，通过反射性地调用其默认构造函数来实例化新的 Channel
  */
 public class ReflectiveChannelFactory<T extends Channel> implements ChannelFactory<T> {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ReflectiveChannelFactory.class);

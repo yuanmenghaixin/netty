@@ -72,7 +72,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      * NioServerSocketChannel 相当于NIO 代码创建 ServerSocketChannel serverSocket = ServerSocketChannel.open();并且配置感兴趣的事件SelectionKey.OP_ACCEPT，并封装Selector但还没有创建 SelectorProvider.provider().
      */
     public NioServerSocketChannel() {
-        this(newSocket(DEFAULT_SELECTOR_PROVIDER));
+        this(newSocket(DEFAULT_SELECTOR_PROVIDER));// newSocket(SelectorProvider.provider())等于NIO代码：ServerSocketChannel.open();
         logger.info("通过反射调用无参构造函数创建NioServerSocketChannel-》NioServerSocketChannel(newSocket(SelectorProvider.provider()));");
     }
 
@@ -87,7 +87,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      * Create a new instance using the given {@link ServerSocketChannel}.
      */
     public NioServerSocketChannel(ServerSocketChannel serverSocketChannel) {
-        super(null, serverSocketChannel, SelectionKey.OP_ACCEPT);
+        super(null, serverSocketChannel, SelectionKey.OP_ACCEPT);// ServerSocketChannel 和 accept事件
         logger.info("把ServerSocketChannel注册到selector上，并且selector对客户端accept连接操作感兴趣");
         config = new NioServerSocketChannelConfig(this, javaChannel().socket());//javaChannel().socket()相当于NIO代码serverSocket.socket()
     }
@@ -142,12 +142,12 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
     }
 
     @Override
-    protected int doReadMessages(List<Object> buf) throws Exception {
-        SocketChannel ch = javaChannel().accept();
-
+    protected int doReadMessages(List<Object> buf) throws Exception {logger.info("SocketChannel ch = javaChannel().accept();->相当于NIO代码SocketChannel socketChannel = server.accept();");
+        SocketChannel ch = javaChannel().accept();//相当于NIO代码SocketChannel socketChannel = server.accept();
+        //TODO 获取到客户端连接 SocketChannel
         try {
             if (ch != null) {
-                buf.add(new NioSocketChannel(this, ch));
+                buf.add(new NioSocketChannel(this, ch));// NioServerSocketChannel 和 SocketChannel两者封装成 NioSocketChannel
                 return 1;
             }
         } catch (Throwable t) {

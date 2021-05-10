@@ -135,11 +135,11 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
     }
 
     @Override
-    void init(Channel channel) throws Exception {
+    void init(Channel channel) throws Exception {// channel=NioServerSocketChannel
         logger.info("ServerBootstrap的init(channel) 初始化方法；NioServerSocketChannel-》ServerSocketChannel的包装类");
         final Map<ChannelOption<?>, Object> options = options0();//ServerBootstrap 配置项的值
-        synchronized (options) {//初始化配置
-            channel.config().setOptions(options);//NIOServerSocketChannelConfig
+        synchronized (options) {//初始化服务端配置
+            channel.config().setOptions(options);//NioServerSocketChannel.NIOServerSocketChannelConfig
         }
 
         final Map<AttributeKey<?>, Object> attrs = attrs0();
@@ -157,17 +157,17 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         final ChannelHandler currentChildHandler = childHandler;//服务端ChannelHandler
         final Entry<ChannelOption<?>, Object>[] currentChildOptions;
         final Entry<AttributeKey<?>, Object>[] currentChildAttrs;
-        synchronized (childOptions) {
+        synchronized (childOptions) {//客户端配置
             currentChildOptions = childOptions.entrySet().toArray(newOptionArray(childOptions.size()));
         }
         synchronized (childAttrs) {
             currentChildAttrs = childAttrs.entrySet().toArray(newAttrArray(childAttrs.size()));
         }
 
-        serverSocketChannelPipeline.addLast(new ChannelInitializer<Channel>() {//TODO add才为重点
+        serverSocketChannelPipeline.addLast(new ChannelInitializer<Channel>() {//TODO 新增一个 ChannelHandler=ChannelInitializer add才为重点
             @Override
             public void initChannel(Channel ch) throws Exception {
-                logger.info("initChannel(Channel ch):" + ch.toString());
+                logger.info("当有channel注册时会调用=initChannel(Channel ch):" + ch.toString()+"]*************************************************");
                 final ChannelPipeline pipeline = ch.pipeline();
                 ChannelHandler handler = config.handler();//获取所有的 ServerBootstrap的childHandler
                 if (handler != null) {
@@ -180,7 +180,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
                 // placed in front of the ServerBootstrapAcceptor.
                 ch.eventLoop().execute(new Runnable() {
                     @Override
-                    public void run() {
+                    public void run() {logger.info("pipeline中添加ServerBootstrapAcceptor(currentChildGroup, currentChildHandler, currentChildOptions, currentChildAttrs))");
                         pipeline.addLast(new ServerBootstrapAcceptor(
                                 currentChildGroup, currentChildHandler, currentChildOptions, currentChildAttrs));
                     }
@@ -250,7 +250,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             }
 
             try {
-                childGroup.register(child).addListener(new ChannelFutureListener() {
+                childGroup.register(child).addListener(new ChannelFutureListener() {// SocketChannel 注册逻辑跟 ServerSocketChannel 注册逻辑一样，注册完成调用 SocketChannel里的ChannelInitializer把里面我们写的Handler全部放到pipeline
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
                         if (!future.isSuccess()) {

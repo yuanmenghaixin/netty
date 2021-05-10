@@ -195,19 +195,19 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     @Override
     public final ChannelPipeline addLast(EventExecutorGroup group, String name, ChannelHandler handler) {
         final AbstractChannelHandlerContext newCtx;
-        synchronized (this) {
-            logger.info(this.toString()+" -addLast() 添加ChannelHandler链表");
+        synchronized (this) {//
+            logger.info(this.toString()+" - addLast() 添加 ChannelHandler 到 DefaultChannelPipeline 链表");
             checkMultiplicity(handler);
-            newCtx = newContext(group, filterName(name, handler), handler);//标记ChannelHandler是属于Inbound还是outbound
+            newCtx = newContext(group, filterName(name, handler), handler);//标记ChannelHandler是属于Inbound还是outbound 并将channel 封装成 newContext
 
-            addLast0(newCtx);//真正的添加
+            addLast0(newCtx);//真正的添加 newCtx=将ChannelHandler封装成一个 DefaultChannelHandlerContext 添加到 NioServerSocketChannel 的 DefaultChannelPipeline
 
             // If the registered is false it means that the channel was not registered on an eventloop yet.
             // In this case we add the context to the pipeline and add a task that will call
             // ChannelHandler.handlerAdded(...) once the channel is registered.
             if (!registered) {
                 newCtx.setAddPending();
-                callHandlerCallbackLater(newCtx, true);
+                callHandlerCallbackLater(newCtx, true);//调用回调处理
                 return this;
             }
 
@@ -415,7 +415,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
                     break;
                 }
             }
-        }
+        }logger.info("将要添加的 ChannelHandler 的系统自动生成的名字-》" + name);
         return name;
     }
 
@@ -1119,7 +1119,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         // the EventLoop.
         PendingHandlerCallback task = pendingHandlerCallbackHead;
         while (task != null) {
-            logger.info(task.toString()+"execute()方法开始执行");
+            logger.info(task.toString()+" - execute()方法开始执行");
             task.execute();
             task = task.next;
         }
@@ -1382,7 +1382,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
 
         @Override
-        void execute() {
+        void execute() {logger.info("DefaultChannelPipeline.execute() 方法开始执行");
             EventExecutor executor = ctx.executor();
             if (executor.inEventLoop()) {
                 callHandlerAdded0(ctx);

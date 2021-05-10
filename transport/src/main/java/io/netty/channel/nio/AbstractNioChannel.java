@@ -83,12 +83,12 @@ public abstract class AbstractNioChannel extends AbstractChannel {
      * @param ch                the underlying {@link SelectableChannel} on which it operates
      * @param readInterestOp    the ops to set to receive data from the {@link SelectableChannel} 相当于SelectionKey的值 读感兴趣操作
      */
-    protected AbstractNioChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
-        super(parent);//bossGroup 为空，workerGroup 是否存在值？？？？
-        this.ch = ch;// ServerSocketChannel 相当于NIO代码创建的ServerSocketChannel serverSocket = ServerSocketChannel.open();
+    protected AbstractNioChannel(Channel parent, SelectableChannel ch, int readInterestOp) {//TODO 当创建NioSocketChannel时 parent=NioServerSocketChannel 和 ch=SocketChannel即客户端socket readInterestOp=SelectionKey.OP_READ
+        super(parent);//bossGroup 为空，workerGroup 是 parent=NioServerSocketChannel
+        this.ch = ch;// 创建NioServerSocketChannel时 ServerSocketChannel 相当于NIO代码创建的ServerSocketChannel serverSocket = ServerSocketChannel.open(); 当创建NioSocketChannel时 ch=SocketChannel即客户端socket
         this.readInterestOp = readInterestOp;//当创建类型为NioServerSocketChannel时：readInterestOp事件的值，比如：readInterestOp=SelectionKey.OP_ACCEPT
         try {
-            ch.configureBlocking(false);// serverSocket.configureBlocking(false); 设置为非阻塞
+            ch.configureBlocking(false);// 相当于NIO源码：serverSocket.configureBlocking(false); 设置为非阻塞
         } catch (IOException e) {
             try {
                 ch.close();
@@ -387,8 +387,8 @@ public abstract class AbstractNioChannel extends AbstractChannel {
         boolean selected = false;
         logger.info("自旋将channel注册到selector-重点");
         for (;;) {//TODO 注册channel到selector对照NIO代码
-            try {
-                selectionKey = javaChannel().register(eventLoop().selector, 0, this);//TODO 相当于 ServerSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+            try {logger.info("注册channel到selector-》javaChannel().register(eventLoop().selector, 0, this)-》对照NIO代码相当于 ServerSocketChannel.register(selector, SelectionKey.OP_ACCEPT);this对象的信息："+this.getClass());
+                selectionKey = javaChannel().register(eventLoop().selector, 0, this);//TODO 相当于 ServerSocketChannel.register(selector, SelectionKey.OP_ACCEPT); this=NioServerSocketChannel
                 return;
             } catch (CancelledKeyException e) {
                 if (!selected) {

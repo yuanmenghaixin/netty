@@ -59,8 +59,8 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
      * @param args              arguments which will passed to each {@link #newChild(Executor, Object...)} call
      */
     protected MultithreadEventExecutorGroup(int nThreads, Executor executor, Object... args) {
-        this(nThreads, executor, DefaultEventExecutorChooserFactory.INSTANCE, args);//定义事件执行策略-默认循环
-        logger.info("定义事件执行策略-默认轮询/循环");
+        this(nThreads, executor, DefaultEventExecutorChooserFactory.INSTANCE, args);//定义事件执行选择策略-默认轮询/循环
+        logger.info("定义事件执行选择策略-默认轮询/循环");
 
     }
 
@@ -79,7 +79,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         }
 
         if (executor == null) {
-            executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());// 创建线程池
+            executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());//TODO 创建线程池 创建线程工厂
             logger.info("创建任务线程执行器（线程池）");
         }
 
@@ -88,7 +88,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         for (int i = 0; i < nThreads; i ++) {
             boolean success = false;
             try {
-                children[i] = newChild(executor, args);//NioEventLoopGroup NioEventLoop 类
+                children[i] = newChild(executor, args);// -》NioEventLoopGroup NioEventLoop 类 executor=ThreadPerTaskExecutor
                 success = true;
             } catch (Exception e) {
                 // TODO: Think about if this is a good exception type
@@ -136,7 +136,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
     }
 
     protected ThreadFactory newDefaultThreadFactory() {
-        return new DefaultThreadFactory(getClass());
+        return new DefaultThreadFactory(getClass());//创建默认线程工厂
     }
 
     @Override

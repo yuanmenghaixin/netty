@@ -27,4 +27,11 @@ import io.netty.util.concurrent.OrderedEventExecutor;
 public interface EventLoop extends OrderedEventExecutor, EventLoopGroup {
     @Override
     EventLoopGroup parent();
+
+    /**
+     * 自己追加方法-方便学习用
+     * @param task 任务
+     * @param name 任务名称
+     */
+    void execute(Runnable task,String name);
 }

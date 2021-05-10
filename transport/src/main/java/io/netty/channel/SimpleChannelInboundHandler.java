@@ -17,6 +17,8 @@ package io.netty.channel;
 
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.internal.TypeParameterMatcher;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 /**
  * {@link ChannelInboundHandlerAdapter} which allows to explicit only handle a specific type of messages.
@@ -46,6 +48,7 @@ import io.netty.util.internal.TypeParameterMatcher;
  * </p>
  */
 public abstract class SimpleChannelInboundHandler<I> extends ChannelInboundHandlerAdapter {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(SimpleChannelInboundHandler.class);
 
     private final TypeParameterMatcher matcher;
     private final boolean autoRelease;
@@ -101,7 +104,7 @@ public abstract class SimpleChannelInboundHandler<I> extends ChannelInboundHandl
         try {
             if (acceptInboundMessage(msg)) {
                 @SuppressWarnings("unchecked")
-                I imsg = (I) msg;
+                I imsg = (I) msg;logger.info("SimpleChannelInboundHandler.channelRead0");
                 channelRead0(ctx, imsg);
             } else {
                 release = false;
