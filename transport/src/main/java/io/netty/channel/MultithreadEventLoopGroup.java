@@ -83,7 +83,7 @@ public abstract class MultithreadEventLoopGroup extends MultithreadEventExecutor
     @Override
     public ChannelFuture register(Channel channel) {
         //SocketChannel 注册逻辑跟 ServerSocketChannel 注册逻辑一样，注册完成调用 SocketChannel里的ChannelInitializer把里面我们写的Handler全部放到pipelineSocketChannel 注册逻辑跟 ServerSocketChannel 注册逻辑一样，注册完成调用 SocketChannel里的ChannelInitializer把里面我们写的Handler全部放到pipeline
-        logger.info("从bossgroup或者workergroup里拿一个线程来处理 Socketchannel 的注册，将其注册到线程自己 selector 上");
+        logger.info("next().register(channel); -> 从bossgroup或者workergroup里拿一个线程(SingleThreadEventLoop)来处理 Socketchannel 的注册，将其注册到线程自己 selector 上:"+this);
         return next().register(channel);//SingleThreadEventLoop.register(channel) 拿一个channel注册到 selector  NioServerSocketChannel
     }
 

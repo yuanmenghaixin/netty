@@ -31,6 +31,7 @@ import java.util.concurrent.ThreadFactory;
 
 /**
  * {@link MultithreadEventLoopGroup} implementations which is used for NIO {@link Selector} based {@link Channel}s.
+ * 每个EventLoopGroup里包括一个或多个EventLoop，每个EventLoop中维护一个Selector实例。
  */
 public class NioEventLoopGroup extends MultithreadEventLoopGroup {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(NioEventLoopGroup.class);

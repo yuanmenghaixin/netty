@@ -318,7 +318,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
 
         Channel channel = null;
         try {//去 NioServerSocketChannel 查看构造方法的源码 ①创建NioServerSocketChannel ②设置感兴趣事件OP_ACCEPT ③设置非阻塞 ④初始化channelPipeline
-            channel = channelFactory.newChannel();//TODO 图灵第一列 NioServerSocketChannel -> ReflectiveChannelFactory 反射工厂实例化 NioServerSocketChannel ->相当于ServerSocketChannel.open(); 并且赋值感兴趣事件属性SelectionKey.OP_ACCEPT 设置非阻塞 并初始化channelPipeline
+            channel = channelFactory.newChannel();//TODO 图灵第一列 ReflectiveChannelFactory 反射工厂实例化 NioServerSocketChannel ;  NioServerSocketChannel ->相当于ServerSocketChannel.open(); 并且赋值感兴趣事件属性SelectionKey.OP_ACCEPT 设置非阻塞 并初始化channelPipeline
             logger.info("ServerBootstrap.init(channel)开始");
             init(channel);//TODO 图灵第二列
         } catch (Throwable t) {
@@ -330,9 +330,9 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             return new DefaultChannelPromise(channel, GlobalEventExecutor.INSTANCE).setFailure(t);
         }
         logger.info("ChannelFuture regFuture = config().group().register(channel);//TODO 图灵第三列");
-        /*ServerBootstrapConfig serverBootstrapConfig= (ServerBootstrapConfig) config();
-        EventLoopGroup eventLoopGroup=serverBootstrapConfig.group();//bossgroup
-        ChannelFuture regFuture1 = eventLoopGroup.register(channel);*/
+        //TODO ServerBootstrapConfig serverBootstrapConfig= (ServerBootstrapConfig) config();
+        //TODO EventLoopGroup multithreadEventLoopGroup=serverBootstrapConfig.group();//bossgroup
+        //TODO ChannelFuture regFuture1 = multithreadEventLoopGroup.register(channel);
         ChannelFuture regFuture = config().group().register(channel);//TODO 图灵第三列 MultithreadEventLoopGroup
         if (regFuture.cause() != null) {
             if (channel.isRegistered()) {

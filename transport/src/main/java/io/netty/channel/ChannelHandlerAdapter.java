@@ -52,9 +52,11 @@ public abstract class ChannelHandlerAdapter implements ChannelHandler {
     }
 
     /**
+     * TODO 当业务处理器被加入到流水线后，此方法被回调，ch.pipeline().addLast(handler)语句之后，会回调handlerAdded()
      * Do nothing by default, sub-classes may override this method.
      */
     @Override
+    //TODO 当业务处理器被加入到流水线后，此方法被回调，ch.pipeline().addLast(handler)语句之后，会回调handlerAdded()
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         // NOOP
     }

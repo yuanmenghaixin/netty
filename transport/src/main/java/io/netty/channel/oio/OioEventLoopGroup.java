@@ -28,6 +28,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 /**
+ * 同步阻塞
+ * 每个EventLoopGroup里包括一个或多个EventLoop，每个EventLoop中维护一个Selector实例。
  * {@link EventLoopGroup} which is used to handle OIO {@link Channel}'s. Each {@link Channel} will be handled by its
  * own {@link EventLoop} to not block others.
  */

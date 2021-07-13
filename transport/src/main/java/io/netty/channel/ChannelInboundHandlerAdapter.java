@@ -32,12 +32,14 @@ package io.netty.channel;
 public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implements ChannelInboundHandler {
 
     /**
+     * 当通道成功绑定一个NioEventLoop线程后，会通过流水线回调所有业务处理器的channelRegistered()
      * Calls {@link ChannelHandlerContext#fireChannelRegistered()} to forward
      * to the next {@link ChannelInboundHandler} in the {@link ChannelPipeline}.
      *
      * Sub-classes may override this method to change behavior.
      */
     @Override
+    //TODO 当通道成功绑定一个NioEventLoop线程后，会通过流水线回调所有业务处理器的channelRegistered()
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
         ctx.fireChannelRegistered();
     }
@@ -60,6 +62,8 @@ public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implemen
      * Sub-classes may override this method to change behavior.
      */
     @Override
+    //TODO 当通道激活成功后，会通过流水线回调所有业务处理器的 channelActive()
+    //激活标识是：所有业务处理器添加，注册的异步任务完成，并且NioEventLoop线程绑定的异步任务完成
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         ctx.fireChannelActive();
     }
@@ -71,6 +75,7 @@ public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implemen
      * Sub-classes may override this method to change behavior.
      */
     @Override
+    //TODO 当底层连接关闭时，会回调所有业务处理器的 channelInactive()
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         ctx.fireChannelInactive();
     }

@@ -48,7 +48,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     private static final NotYetConnectedException FLUSH0_NOT_YET_CONNECTED_EXCEPTION = ThrowableUtil.unknownStackTrace(
             new NotYetConnectedException(), AbstractUnsafe.class, "flush0()");
 
-    private final Channel parent;
+    private final Channel parent;//父通道
     private final ChannelId id;
     private final Unsafe unsafe;
     /**
@@ -74,7 +74,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
      *        the parent of this channel. {@code null} if there's no parent.
      */
     protected AbstractChannel(Channel parent) {
-        this.parent = parent;
+        this.parent = parent;//父通道 NioServerSocketChannel实例来说，其父通道为null,而NioSocketChannel实例，其属性值为接收到该链接的服务器链接监听通道
         id = newId();
         unsafe = newUnsafe();//NioMessageUnsafe
         logger.info("初始化channel为 NioServerSocketChannel/NioSocketChannel 时 newChannelPipeline-》 pipeline = newChannelPipeline()-》 new DefaultChannelPipeline(NioServerSocketChannel/NioSocketChannel)->"+this.getClass());
@@ -143,7 +143,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
     @Override
     public ChannelPipeline pipeline() {
-        return pipeline;//服务端ServerSocketChannel
+        return pipeline;//服务端ServerSocketChannel创建的new DefaultChannelPipeline(this)
     }
 
     @Override
@@ -215,7 +215,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     }
 
     @Override
-    public ChannelFuture connect(SocketAddress remoteAddress) {
+    public ChannelFuture connect(SocketAddress remoteAddress) {//TODO 链接远程服务器，调用后会立即返回，返回值为负责链接操作的异步任务ChannelFuture 客户端使用
         return pipeline.connect(remoteAddress);
     }
 
@@ -229,6 +229,8 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         return pipeline.disconnect();
     }
 
+    //TODO 返回连接关闭的ChannelFuture异步任务，如果需要在连接正式关闭后执行其它操作，则 需要为异步任务设置回调方法
+    //或者调用ChannelFuture异步任务的sync()方法来阻塞当前线程，一直等到通道关闭的异步任务执行完毕
     @Override
     public ChannelFuture close() {
         return pipeline.close();
@@ -239,6 +241,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
         return pipeline.deregister();
     }
 
+    //TODO 将缓冲区中的数据立即写出到对端
     @Override
     public Channel flush() {
         pipeline.flush();
@@ -246,7 +249,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     }
 
     @Override
-    public ChannelFuture bind(SocketAddress localAddress, ChannelPromise promise) {
+    public ChannelFuture bind(SocketAddress localAddress, ChannelPromise promise) {//TODO 绑定监听地址，开始监听新的客户端连接
         return pipeline.bind(localAddress, promise);
     }
 
@@ -274,13 +277,14 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     public ChannelFuture deregister(ChannelPromise promise) {
         return pipeline.deregister(promise);
     }
-
+    //TODO 读取通道数据，并且启动入站处理。从内部的Java nio channel通道读取数据，然后启动内部的pipline流水线，开启数据读取的入栈处理，此方法的返回通道自身用于链式调用
     @Override
     public Channel read() {
         pipeline.read();
         return this;
     }
 
+    //TODO 启动出栈流水处理，把处理后的最终数据写到底层JavaNio 通道，此方法的返回值为出站处理的异步处理任务
     @Override
     public ChannelFuture write(Object msg) {
         return pipeline.write(msg);

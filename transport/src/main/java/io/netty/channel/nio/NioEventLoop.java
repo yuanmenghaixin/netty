@@ -51,6 +51,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * {@link SingleThreadEventLoop} implementation which register the {@link Channel}'s to a
  * {@link Selector} and so does the multi-plexing of these in the event loop.
  * NioEventLoop 封装 Selector 、TaskQueue 和 Executor(netty实现的线程池)
+ * NioEventLoop是一个无限循环，负责监听相对应的事件
  */
 public final class NioEventLoop extends SingleThreadEventLoop {
 

@@ -15,6 +15,7 @@
  */
 package io.netty.handler.codec.http.websocketx;
 
+import com.sun.xml.internal.bind.v2.TODO;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -130,6 +131,7 @@ public class WebSocketServerProtocolHandler extends WebSocketProtocolHandler {
     }
 
     @Override
+    //TODO 当业务处理器被加入到流水线后，此方法被回调，ch.pipeline().addLast(handler)语句之后，会回调handlerAdded()
     public void handlerAdded(ChannelHandlerContext ctx) {
         ChannelPipeline cp = ctx.pipeline();
         if (cp.get(WebSocketServerProtocolHandshakeHandler.class) == null) {

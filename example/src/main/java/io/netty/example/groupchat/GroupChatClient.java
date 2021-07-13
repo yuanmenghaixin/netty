@@ -30,7 +30,7 @@ public class GroupChatClient {
             //注意客户端使用的不是 ServerBootstrap 而是 Bootstrap java原生使用的socketChannel
             Bootstrap bootstrap = new Bootstrap()
                     .group(group)//设置线程组
-                    .channel(NioSocketChannel.class)// 使用 NioSocketChannel 作为客户端的通道实现
+                    .channel(NioSocketChannel.class)// 使用 NioSocketChannel 作为客户端的通道实现  异步非阻塞的客户端 TCP Socket 连接。
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
@@ -55,7 +55,10 @@ public class GroupChatClient {
                 //通过channel 发送到服务器端
                 channel.writeAndFlush(msg + "\r\n");
             }
+            //对通道关闭进行监听
+            channelFuture.channel().closeFuture().sync();
         } finally {
+            //关闭线程组
             group.shutdownGracefully();
         }
     }

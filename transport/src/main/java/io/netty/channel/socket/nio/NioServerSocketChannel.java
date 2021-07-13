@@ -88,7 +88,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
      */
     public NioServerSocketChannel(ServerSocketChannel serverSocketChannel) {
         super(null, serverSocketChannel, SelectionKey.OP_ACCEPT);// ServerSocketChannel 和 accept事件
-        logger.info("把ServerSocketChannel注册到selector上，并且selector对客户端accept连接操作感兴趣");
+        logger.info("把ServerSocketChannel和对客户端accept连接操作感兴趣事件封装到 NioServerSocketChannel");
         config = new NioServerSocketChannelConfig(this, javaChannel().socket());//javaChannel().socket()相当于NIO代码serverSocket.socket()
     }
 

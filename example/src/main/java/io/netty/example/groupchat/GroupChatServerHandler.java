@@ -10,6 +10,28 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 import java.text.SimpleDateFormat;
 
 public class GroupChatServerHandler extends SimpleChannelInboundHandler<String> {
+    /**
+     * ChannelInboundHandlerAdapter处理器常用的事件有：
+     *
+     * 注册事件 fireChannelRegistered。
+     * 连接建立事件 fireChannelActive。
+     * 读事件和读完成事件 fireChannelRead、fireChannelReadComplete。
+     * 异常通知事件 fireExceptionCaught。
+     * 用户自定义事件 fireUserEventTriggered。
+     * Channel 可写状态变化事件 fireChannelWritabilityChanged。
+     * 连接关闭事件 fireChannelInactive。
+     */
+    /**
+     * ChannelOutboundHandler处理器常用的事件有：
+     *
+     * 端口绑定 bind。
+     * 连接服务端 connect。
+     * 写事件 write。
+     * 刷新时间 flush。
+     * 读事件 read。
+     * 主动断开连接 disconnect。
+     * 关闭 channel 事件 close。
+     */
 
     //public static List<Channel> channels = new ArrayList<Channel>();
 
@@ -44,7 +66,11 @@ public class GroupChatServerHandler extends SimpleChannelInboundHandler<String> 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
 
-        Channel channel = ctx.channel();
+        Channel channel = ctx.channel();//TODO 一种连接到网络套接字或能进行读、写、连接和绑定等I/O操作的组件。
+        //TODO channel为用户提供：
+        ///TODO 通道当前的状态（例如它是打开？还是已连接？）boolean isOpen(); //如果通道打开，则返回true boolean isRegistered();//如果通道注册到EventLoop，则返回true boolean isActive();//如果通道处于活动状态并且已连接，则返回true boolean isWritable();//当且仅当I/O线程将立即执行请求的写入操作时，返回true。
+        //TODO channel的配置参数（例如接收缓冲区的大小）
+        //TODO channel支持的IO操作（例如读、写、连接和绑定），以及处理与channel相关联的所有IO事件和请求的ChannelPipeline。
         channelGroup.writeAndFlush("[客户端]" + channel.remoteAddress() + " 离开了\n");
         System.out.println("channelGroup size" + channelGroup.size());
 

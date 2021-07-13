@@ -84,6 +84,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         }
 
         children = new EventExecutor[nThreads];
+        logger.info("children = new EventExecutor[nThreads];->nThreads:" +nThreads+" args:"+args);
 
         for (int i = 0; i < nThreads; i ++) {
             boolean success = false;

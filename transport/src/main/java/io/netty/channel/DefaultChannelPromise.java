@@ -46,7 +46,7 @@ public class DefaultChannelPromise extends DefaultPromise<Void> implements Chann
      * Creates a new instance.
      *
      * @param channel the {@link Channel} associated with this future
-     *        NioServerSocketChannel 和 （EventExecutor =》并封装 DefaultPromise） 二者封装成DefaultChannelPromise
+     *        NioServerSocketChannel 和 （SingleThreadEventLoop=EventExecutor =》并封装 DefaultPromise） 二者封装成DefaultChannelPromise
      */
     public DefaultChannelPromise(Channel channel, EventExecutor executor) {
         super(executor);

@@ -121,6 +121,7 @@ import java.nio.channels.Channels;
  * {@link ChannelPipeline} to find out more about inbound and outbound operations,
  * what fundamental differences they have, how they flow in a  pipeline,  and how to handle
  * the operation in your application.
+ * Netty设计了这个ChannelHandlerContext上下文对象，就可以拿到channel、pipeline等对象，就可以进行读写等操作。
  */
 public interface ChannelHandlerContext extends AttributeMap, ChannelInboundInvoker, ChannelOutboundInvoker {
 

@@ -135,7 +135,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
     }
 
     @Override
-    void init(Channel channel) throws Exception {// channel=NioServerSocketChannel
+    void init(Channel channel) throws Exception { // channel=NioServerSocketChannel
         logger.info("ServerBootstrap的init(channel) 初始化方法；NioServerSocketChannel-》ServerSocketChannel的包装类");
         final Map<ChannelOption<?>, Object> options = options0();//ServerBootstrap 配置项的值
         synchronized (options) {//初始化服务端配置
@@ -151,7 +151,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
             }
         }
 
-        ChannelPipeline serverSocketChannelPipeline = channel.pipeline();
+        ChannelPipeline serverSocketChannelPipeline = channel.pipeline();//服务端ServerSocketChannel创建的new DefaultChannelPipeline(this)
 
         final EventLoopGroup currentChildGroup = childGroup;//当前工作组线程 NIOEventLoop数组
         final ChannelHandler currentChildHandler = childHandler;//服务端ChannelHandler
